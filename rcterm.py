@@ -39,7 +39,6 @@ class RetCom87(serial.Serial):
             message = self.read_until(self.STARTUP_END_SEQUENCE)
             if "MENSCH" in message.decode():
                 self.print_formatted(message)
-                self.write_prompt()
                 break
 
     # pyserial uses io library's readline() which can only use \n as the delimeter
@@ -73,6 +72,7 @@ class RetCom87(serial.Serial):
 
     # general purpose read/write loop
     def simple_loop(self):
+        self.write_prompt()
         while True:
             if self.in_waiting > 0:
                 self.simple_read()
