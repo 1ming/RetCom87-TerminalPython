@@ -11,6 +11,7 @@ from serial.tools import list_ports
 class RetCom87(serial.Serial):
     DEFAULT_END_SEQUENCE = b"\r>"
     STARTUP_END_SEQUENCE = b"\r\r>"
+    MAX_READ_BYTES = 256
 
     def __init__(self, port, baudrate=9600, timeout=5, show_raw=False, **kwargs):
         self.show_raw = show_raw
@@ -95,6 +96,25 @@ class RetCom87(serial.Serial):
                 print(line)
         print("===")
         print()
+
+    # write the output from the device to a file
+    def write_output_file(self, save_file="output.txt", verbose=True):
+        print(f"Writing output to file: {save_file}")
+        with open(save_file, "wb") as fh:
+            while self.in_waiting > 0:
+                bytes_to_read = self.in_waiting
+                bytes_to_read = (
+                    self.MAX_READ_BYTES
+                    if bytes_to_read > self.MAX_READ_BYTES
+                    else bytes_to_read
+                )
+                data = self.read(bytes_to_read)
+                if verbose:
+                    print(f"Read {len(data)} bytes")
+                    print(data)
+                fh.write(data)
+                time.sleep(0.1)
+        print("Writing complete.")
 
 
 # get the first device matching the pattern
