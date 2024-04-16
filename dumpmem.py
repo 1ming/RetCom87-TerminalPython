@@ -26,11 +26,27 @@ def memory_dump(device, low, high, save_file="dump.txt", verbose=True):
         # write output to a file
         device.write_output_file(save_file, verbose)
 
+# parse the memory dump text file and convert it to a binary
+# not the most robust but works for this purpose
+def convert_to_binary(input_file, output_file):
+    fh_out = open(output_file, "wb")
+    with open(input_file, "r") as fh_in:
+        for line in fh_in.readlines():
+            # consider any line that starts with 00: valid for processing
+            if line.startswith("00:"):
+                # create a string of only the hex values with no spaces in between to be turned into a byte array
+                data = "".join(line.split()[1:])
+                line_bytes = bytearray.fromhex(data)
+                fh_out.write(line_bytes)
+    fh_out.close()
 
 if __name__ == "__main__":
     PORT = "/dev/cu.usbserial-A10LVXS7"
     rc = RetCom87(port=PORT)
     rc.start_sequence()
 
+    # first, dump memory from a location and store in a text file
     memory_dump(rc, "00:E000", "00:FFFF", save_file="monitor.txt", verbose=True)
-    # memory_dump(rc, "00:0200", "00:1000", verbose=True)
+
+    # parse the text file and convert it to a binary
+    convert_to_binary("monitor.txt", "monitor.bin")
